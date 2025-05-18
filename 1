@@ -1,0 +1,61 @@
+import shutil
+import smtplib
+import os
+import smtplib
+from email.message import EmailMessage
+import socket
+SYSTEM_NAME = socket.gethostname()
+
+APP_PASSWORD = os.environ.get('GMAIL_PASSWORD')
+
+THRESHOLD = 30  # percent
+EMAIL = 'amitmjadav007@gmail.com'
+
+def check_disk_usage(path="/"):
+    total, used, free = shutil.disk_usage(path)
+    percent_used = used / total * 100
+    return percent_used
+
+#def send_alert():
+#    server = smtplib.SMTP('smtp.example.com', 587)
+#    server.starttls()
+#    server.login('user', 'password')
+#    message = "Subject: Disk Space Alert\n\nDisk usage exceeded threshold!"
+#    server.sendmail('alert@example.com', EMAIL, message)
+#    server.quit()
+
+usage = check_disk_usage("/")
+print(f"Disk Usage is at {usage:.2f}%")
+
+#if check_disk_usage() > THRESHOLD:
+#    send_alert()
+
+def send_alert():
+    msg = EmailMessage()
+    msg.set_content(
+        f"""⚠️ Disk usage alert for system: {SYSTEM_NAME}
+
+        Current usage: {usage:.2f}%
+        Threshold: {THRESHOLD}%
+
+        Please take action to free up disk space.
+        """)
+    msg['Subject'] = f'Disk Alert: {SYSTEM_NAME} at {usage:.2f}% usage'
+    msg['From'] = EMAIL
+    msg['To'] = EMAIL
+
+
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+        smtp.login(EMAIL, APP_PASSWORD)
+        smtp.send_message(msg)
+
+#if check_disk_usage() > THRESHOLD:
+#    send_alert()
+
+
+
+if usage > THRESHOLD:
+   send_alert(usage)
+else:
+    print(f"Disk usage is OK: {usage:.2f}% on {SYSTEM_NAME}")
+
